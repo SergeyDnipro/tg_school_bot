@@ -10,7 +10,6 @@ def get_keyboard():
     keyboard.add(button_choice_day, button_get_tasks, button_start)
     list_of_buttons = [button_choice_day.text, button_get_tasks.text, button_start.text]
     SYSTEM_BUTTONS.extend(list_of_buttons) if not SYSTEM_BUTTONS else None
-    print('dgfsgfs')
     print(SYSTEM_BUTTONS)
     return keyboard
 
