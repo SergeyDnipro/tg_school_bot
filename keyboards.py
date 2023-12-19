@@ -1,5 +1,6 @@
 from telebot import types
 from storage import SYSTEM_BUTTONS
+from storage import database as db
 
 
 def get_keyboard():
@@ -23,7 +24,35 @@ def get_days_keyboard():
     friday = types.KeyboardButton(text="Friday")
 
     keyboard.add(monday, tuesday, wednesday, thursday, friday)
-    back_button = types.KeyboardButton(text="Back to start")
+    back_button = types.KeyboardButton(text="Back")
     keyboard.add(back_button)
     return keyboard
 
+
+def day_actions_menu():
+    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    edit_button = types.KeyboardButton(text="Edit")
+    back_button = types.KeyboardButton(text="Back")
+    keyboard.add(edit_button, back_button)
+    return keyboard
+
+
+def get_lessons_keyboard(lessons: str):
+    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    lesson_temp = []
+    for lesson in lessons:
+        lesson_button = types.KeyboardButton(text=lesson)
+        lesson_temp.append(lesson_button)
+    keyboard.add(*lesson_temp)
+
+    back_button = types.KeyboardButton('Back')
+    keyboard.add(back_button)
+    return keyboard
+
+
+def get_edit_lesson_record():
+    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    save_button = types.KeyboardButton('Save')
+    back_button = types.KeyboardButton('Back')
+    keyboard.add(save_button, back_button)
+    return keyboard
