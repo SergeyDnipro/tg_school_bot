@@ -52,6 +52,9 @@ class SQLiteDatabaseConnection:
             """
             cursor.execute(query, {"day": day, "lesson": lesson, "name_of_lesson": name_of_lesson})
 
+    def add_record(self, *, day: str, lesson: int, name_of_lesson: str):
+        pass
+
 
 week_days = {
     'Monday': 0,
@@ -74,10 +77,12 @@ schedule = {
     }
 }
 
+
 CHAT_ID = ''
 SYSTEM_BUTTONS = []
 TEMP_DAY = ''
 TEMP_LESSONS_FOR_DAY = []
+TEMP_LESSONS_NUMBERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 TEMP_LESSON_NUMBER = None
 TEMP_LESSON_TITLE = ''
 
