@@ -6,6 +6,8 @@ from storage import database as db
 import logging
 import keyboards
 from tools import get_messages, get_lessons_from_db
+from telebot import types
+
 
 bot = telebot.TeleBot(config.TOKEN)
 
@@ -24,22 +26,39 @@ def get_messages_for_day(message):
         result_for_day = get_lessons_from_db(request_day=message.text)
         storage.TEMP_DAY = message.text
         bot.send_message(storage.CHAT_ID, result_for_day, parse_mode="Markdown", reply_markup=keyboards.day_actions_menu())
-        bot.register_next_step_handler(message, get_messages_for_day)
+        bot.register_next_step_handler(message, choose_day_option)
+
+
+def choose_day_option(message):
+    if message.text == 'Back':
+        message.text = 'Choose day'
+        return handle_messages(message)
+    try:
+        day_option_string = message.text + '_single_lesson'
+        day_option_funtion = globals()[day_option_string.lower()]
+        bot.send_message(storage.CHAT_ID, 'Choose action you want - Add/Edit...', parse_mode="Markdown", reply_markup=keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY))
+        bot.register_next_step_handler(message, day_option_funtion)
+    except Exception as e:
+        bot.send_message(storage.CHAT_ID, str(e))
+
+
+def add_single_lesson(message):
+    print('******')
 
 
 def edit_single_lesson(message):
     if message.text == 'Back':
-        message.text = 'Choose day'
-        return handle_messages(message)
+        message.text = storage.TEMP_DAY
+        return get_messages_for_day(message)
     elif storage.TEMP_LESSON_NUMBER:
         db.edit_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=message.text)
         get_lessons_from_db(request_day=storage.TEMP_DAY)
         bot.send_message(storage.CHAT_ID, 'Data saved to db', parse_mode="Markdown", reply_markup=keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY))
         bot.register_next_step_handler(message, get_messages_for_day)
-    elif message.text[:1] in ['1', '2', '3', '4', '5', '6']:
+    elif message.text[:1] in storage.TEMP_LESSONS_NUMBERS:
         storage.TEMP_LESSON_NUMBER = int(message.text[:1])
         bot.send_message(storage.CHAT_ID, 'Enter lesson title for this time:', parse_mode="Markdown",
-                         reply_markup=keyboards.get_edit_lesson_record())
+                         reply_markup=types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, edit_single_lesson)
     # else:
     #     bot.register_next_step_handler(message, edit_single_lesson)

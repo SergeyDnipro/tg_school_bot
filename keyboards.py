@@ -31,9 +31,11 @@ def get_days_keyboard():
 
 def day_actions_menu():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    add_button = types.KeyboardButton(text="Add")
     edit_button = types.KeyboardButton(text="Edit")
+    keyboard.add(add_button, edit_button)
     back_button = types.KeyboardButton(text="Back")
-    keyboard.add(edit_button, back_button)
+    keyboard.add(back_button)
     return keyboard
 
 
