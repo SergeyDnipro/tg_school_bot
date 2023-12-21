@@ -4,7 +4,7 @@ import storage
 from storage import database as db
 
 
-def serialize_tuple_to_dict(responce: list[tuple]) -> list[dict]:
+def serialize_tuple_to_dict(responce: list) -> list:
     serialized_response = [
         dict(
             order_number=lesson[0],
