@@ -34,16 +34,19 @@ def choose_day_option(message):
         message.text = 'Choose day'
         return handle_messages(message)
     try:
+        current_keyboard = keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY) if message.text == 'Edit' else keyboards.get_edit_lesson_record()
         day_option_string = message.text + '_single_lesson'
-        day_option_funtion = globals()[day_option_string.lower()]
-        bot.send_message(storage.CHAT_ID, 'Choose action you want - Add/Edit...', parse_mode="Markdown", reply_markup=keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY))
-        bot.register_next_step_handler(message, day_option_funtion)
+        day_option_function = globals()[day_option_string.lower()]
+        bot.send_message(storage.CHAT_ID, 'Choose lesson for edit or add lesson', parse_mode="Markdown", reply_markup=current_keyboard)
+        bot.register_next_step_handler(message, day_option_function)
     except Exception as e:
         bot.send_message(storage.CHAT_ID, str(e))
 
 
 def add_single_lesson(message):
-    print('******')
+    if message.text == 'Back':
+        message.text = storage.TEMP_DAY
+        return get_messages_for_day(message)
 
 
 def edit_single_lesson(message):
@@ -58,7 +61,7 @@ def edit_single_lesson(message):
     elif message.text[:1] in storage.TEMP_LESSONS_NUMBERS:
         storage.TEMP_LESSON_NUMBER = int(message.text[:1])
         bot.send_message(storage.CHAT_ID, 'Enter lesson title for this time:', parse_mode="Markdown",
-                         reply_markup=types.ReplyKeyboardRemove())
+                         reply_markup=keyboards.get_edit_lesson_record())
         bot.register_next_step_handler(message, edit_single_lesson)
     # else:
     #     bot.register_next_step_handler(message, edit_single_lesson)

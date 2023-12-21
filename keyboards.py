@@ -54,7 +54,7 @@ def get_lessons_keyboard(lessons: str):
 
 def get_edit_lesson_record():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    save_button = types.KeyboardButton('Save')
+    # save_button = types.KeyboardButton('Save')
     back_button = types.KeyboardButton('Back')
-    keyboard.add(save_button, back_button)
+    keyboard.add(back_button)
     return keyboard
