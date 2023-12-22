@@ -53,7 +53,15 @@ class SQLiteDatabaseConnection:
             cursor.execute(query, {"day": day, "lesson": lesson, "name_of_lesson": name_of_lesson})
 
     def add_record(self, *, day: str, lesson: int, name_of_lesson: str):
-        pass
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            values = [day, lesson, TEMP_TIME_LIST[0], TEMP_TIME_LIST[1], name_of_lesson]
+            query = """
+                INSERT INTO schedule(day_of_week, number_of_lesson, start_time, end_time, name_of_lesson)
+                VALUES (?,?,?,?,?)
+            """
+            cursor.execute(query, values)
+            connection.commit()
 
 
 week_days = {
@@ -81,8 +89,17 @@ schedule = {
 CHAT_ID = ''
 SYSTEM_BUTTONS = []
 TEMP_DAY = ''
+TEMP_TIME_LIST = []
 TEMP_LESSONS_FOR_DAY = []
-TEMP_LESSONS_NUMBERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+TEMP_LESSONS_NUMBERS = {
+    '1': '8:55-9:40',
+    '2': '9:50-10:35',
+    '4': '12:00-12:45',
+    '5': '13:00-13:45',
+    '6': '13:55-14:40',
+    '7': '14:50-15:35',
+    '8': '15:45-16:30'
+}
 TEMP_LESSON_NUMBER = None
 TEMP_LESSON_TITLE = ''
 
