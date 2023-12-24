@@ -82,6 +82,9 @@ def add_single_lesson(message):
 
 
 def add_single_lesson_insert_to_db(message):
+    if message.text == "Back":
+        message.text = storage.TEMP_DAY
+        return get_messages_for_day(message)
     db.add_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=message.text)
     get_lessons_from_db(request_day=storage.TEMP_DAY)
     bot.send_message(
@@ -97,6 +100,11 @@ def edit_single_lesson(message):
         message.text = storage.TEMP_DAY
         return get_messages_for_day(message)
     elif storage.TEMP_LESSON_NUMBER:
+        if message.text == 'Delete':
+            message.text = storage.TEMP_DAY
+            db.delete_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER)
+            get_lessons_from_db(request_day=storage.TEMP_DAY)
+            return get_messages_for_day(message)
         db.edit_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=message.text)
         get_lessons_from_db(request_day=storage.TEMP_DAY)
         bot.send_message(

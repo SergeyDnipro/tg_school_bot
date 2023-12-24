@@ -63,6 +63,16 @@ class SQLiteDatabaseConnection:
             cursor.execute(query, values)
             connection.commit()
 
+    def delete_record(self, *, day: str, lesson: int):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+            query = """
+                DELETE FROM schedule
+                WHERE day_of_week = :day AND number_of_lesson = :lesson
+            """
+            cursor.execute(query, {"day": day, "lesson": lesson})
+            connection.commit()
+
 
 week_days = {
     'Monday': 0,
@@ -94,6 +104,7 @@ TEMP_LESSONS_FOR_DAY = []
 TEMP_LESSONS_NUMBERS = {
     '1': '8:55-9:40',
     '2': '9:50-10:35',
+    '3': '10:45-11:30',
     '4': '12:00-12:45',
     '5': '13:00-13:45',
     '6': '13:55-14:40',
