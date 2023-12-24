@@ -44,8 +44,9 @@ def get_lessons_from_db(request_day: str = None):
                 result_day += f"\nONLINE"
             elif element['order_number'] == 4:
                 result_day += f"\n\nOFFLINE"
-            result_day += f"\n{element['order_number']} - {element['start_time']}-{element['end_time']} - {element['lesson_name']}"
-            if datetime.strptime(element['start_time'], '%H:%M').time() < datetime.now().time() < datetime.strptime(element['end_time'], '%H:%M').time():
+            result_day += f"\n{element['order_number']}. {element['start_time']}-{element['end_time']} - {element['lesson_name']}"
+            if datetime.strptime(element['start_time'], '%H:%M').time() < datetime.now().time() < datetime.strptime(element['end_time'], '%H:%M').time()\
+                    and day == datetime.today().strftime('%A'):
                 result_day += '- NOW'
             storage.TEMP_LESSONS_FOR_DAY.append(f"{element['order_number']}.\t   {element['start_time']}-{element['end_time']} - {element['lesson_name']}")
         return result_day
