@@ -95,7 +95,7 @@ schedule = {
     }
 }
 
-
+ADMIN_ID = 5282220678
 CHAT_ID = ''
 SYSTEM_BUTTONS = []
 TEMP_DAY = ''
@@ -104,7 +104,6 @@ TEMP_LESSONS_FOR_DAY = []
 TEMP_LESSONS_NUMBERS = {
     '1': '8:55-9:40',
     '2': '9:50-10:35',
-    '3': '10:45-11:30',
     '4': '12:00-12:45',
     '5': '13:00-13:45',
     '6': '13:55-14:40',
