@@ -3,10 +3,10 @@ import telebot
 from datetime import datetime
 import storage
 from storage import database as db
-import logging
 import keyboards
 from tools import get_messages, get_lessons_from_db
 from telebot import types
+from logger import main_logger
 
 
 bot = telebot.TeleBot(config.TOKEN)
@@ -14,8 +14,8 @@ bot = telebot.TeleBot(config.TOKEN)
 
 def get_messages_for_day(message):
     storage.TEMP_LESSON_NUMBER = None
-    # if message.text == 'Back':
-    #     return start(message)
+    if message.text == 'Back':
+        return start(message)
     if message.text == 'Back':
         message.text = 'Choose day'
         return handle_messages(message)
@@ -36,6 +36,8 @@ def get_messages_for_day(message):
             parse_mode="Markdown",
             reply_markup=keyboards.day_actions_menu()
         )
+        # Request for day logging
+        main_logger.info(f"User {message.from_user.first_name} ({message.from_user.id}) request schedule for {message.text}")
         bot.register_next_step_handler(message, choose_day_option)
 
 
@@ -46,6 +48,8 @@ def choose_day_option(message):
     elif message.chat.id != storage.ADMIN_ID:
         message.text = storage.TEMP_DAY
         bot.send_message(message.chat.id, 'You are not authorised to do this action!', parse_mode="Markdown")
+        # Try to edit/delete without authorization logging
+        main_logger.warn(f"User {message.from_user.first_name} ({message.from_user.id}) try to edit/delete schedule record")
         return get_messages_for_day(message)
     try:
         current_keyboard_function = keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY) \
@@ -92,6 +96,9 @@ def add_single_lesson_insert_to_db(message):
         message.text = storage.TEMP_DAY
         return get_messages_for_day(message)
     db.add_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=message.text)
+    # Add record logging
+    main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
+                        f"added record for {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER} - {message.text}")
     get_lessons_from_db(request_day=storage.TEMP_DAY)
     bot.send_message(
         message.chat.id,
@@ -109,9 +116,15 @@ def edit_single_lesson(message):
         if message.text == 'Delete':
             message.text = storage.TEMP_DAY
             db.delete_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER)
+            # Delete record logging
+            main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
+                                f"delete record for: {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER}")
             get_lessons_from_db(request_day=storage.TEMP_DAY)
             return get_messages_for_day(message)
         db.edit_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=message.text)
+        # Edit record logging
+        main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
+                            f"edited record for {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER} - {message.text}")
         get_lessons_from_db(request_day=storage.TEMP_DAY)
         bot.send_message(
             message.chat.id,
@@ -135,7 +148,9 @@ def edit_single_lesson(message):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    print(f"Start chat with user: {message.from_user.id} - {message.from_user.first_name}")
+    # New user start logging
+    main_logger.info(f"Start chat with user: {message.from_user.first_name} ({message.from_user.id})")
+    # print(f"Start chat with user: {message.from_user.id} - {message.from_user.first_name}")
     bot.send_message(
         message.chat.id,
         f"Welcome back, {message.from_user.first_name}",
@@ -156,8 +171,10 @@ def handle_messages(message):
         bot.register_next_step_handler(message, get_messages_for_day)
     elif message.text == 'Today Tasks':
         bot.send_message(message.chat.id, get_lessons_from_db())
-    elif message.text == 'Start':
-        start(message)
+        # Today request logging
+        main_logger.info(f"User {message.from_user.first_name} ({message.from_user.id}) request schedule for today")
+    # elif message.text == 'Start':warn
+    #     start(message)
     else:
         bot.send_message(
             message.chat.id,
