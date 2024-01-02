@@ -7,11 +7,10 @@ def get_keyboard():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     button_choice_day = types.KeyboardButton(text="Choose day")
     button_get_tasks = types.KeyboardButton(text="Today Tasks")
-    button_start = types.KeyboardButton(text="Start")
-    keyboard.add(button_choice_day, button_get_tasks, button_start)
-    list_of_buttons = [button_choice_day.text, button_get_tasks.text, button_start.text]
+    # button_start = types.KeyboardButton(text="Start")
+    keyboard.add(button_choice_day, button_get_tasks)
+    list_of_buttons = [button_choice_day.text, button_get_tasks.text]
     SYSTEM_BUTTONS.extend(list_of_buttons) if not SYSTEM_BUTTONS else None
-    print(SYSTEM_BUTTONS)
     return keyboard
 
 
@@ -57,4 +56,11 @@ def get_edit_lesson_record():
     delete_button = types.KeyboardButton('Delete')
     back_button = types.KeyboardButton('Back')
     keyboard.add(back_button, delete_button)
+    return keyboard
+
+
+def add_lesson_record():
+    keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    back_button = types.KeyboardButton('Back')
+    keyboard.add(back_button)
     return keyboard
