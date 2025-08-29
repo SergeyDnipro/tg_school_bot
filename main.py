@@ -14,9 +14,9 @@ bot = telebot.TeleBot(config.TOKEN)
 
 def get_messages_for_day(message):
     storage.TEMP_LESSON_NUMBER = None
-    if message.text == 'Back':
+    if message.text == '\U00002B05 Back':
         return start(message)
-    if message.text == 'Back':
+    if message.text == '\U00002B05 Back':
         message.text = 'Choose day'
         return handle_messages(message)
     # elif message.text == 'Edit':
@@ -42,10 +42,10 @@ def get_messages_for_day(message):
 
 
 def choose_day_option(message):
-    if message.text == 'Back':
+    if message.text == '\U00002B05 Back':
         message.text = 'Choose day'
         return handle_messages(message)
-    elif message.chat.id != storage.ADMIN_ID:
+    elif message.chat.id not in storage.ADMIN_ID:
         message.text = storage.TEMP_DAY
         bot.send_message(message.chat.id, 'You are not authorised to do this action!', parse_mode="Markdown")
         # Try to edit/delete without authorization logging
