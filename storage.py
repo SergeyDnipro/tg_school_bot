@@ -95,7 +95,7 @@ schedule = {
     }
 }
 
-ADMIN_ID = 5282220678
+ADMIN_ID = (5282220678, 5659473480)
 CHAT_ID = ''
 SYSTEM_BUTTONS = []
 TEMP_DAY = ''
