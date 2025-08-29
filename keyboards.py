@@ -23,7 +23,7 @@ def get_days_keyboard():
     friday = types.KeyboardButton(text="Friday")
 
     keyboard.add(monday, tuesday, wednesday, thursday, friday)
-    back_button = types.KeyboardButton(text="Back")
+    back_button = types.KeyboardButton(text="⬅ Back")
     keyboard.add(back_button)
     return keyboard
 
@@ -33,7 +33,7 @@ def day_actions_menu():
     add_button = types.KeyboardButton(text="Add")
     edit_button = types.KeyboardButton(text="Edit")
     keyboard.add(add_button, edit_button)
-    back_button = types.KeyboardButton(text="Back")
+    back_button = types.KeyboardButton(text="\U00002B05 Back")
     keyboard.add(back_button)
     return keyboard
 
