@@ -4,20 +4,19 @@ import storage
 from storage import database as db
 
 
-def serialize_tuple_to_dict(responce: list) -> list:
+def serialize_tuple_to_dict(response: list) -> list:
     serialized_response = [
         dict(
             order_number=lesson[0],
             start_time=lesson[1],
             end_time=lesson[2],
             lesson_name=lesson[3]
-        ) for lesson in responce
+        ) for lesson in response
     ]
     return serialized_response
 
 
 def get_messages(message, request_day=None):
-    print(request_day)
     day = storage.week_days[request_day] if request_day else datetime.today().weekday()
     if day in storage.schedule:
         result_day = f"Today is: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Schedule for {request_day}:\n"
@@ -35,10 +34,10 @@ def get_messages(message, request_day=None):
 def get_lessons_from_db(request_day: str = None):
     day = request_day if request_day else datetime.today().strftime('%A')
     storage.TEMP_LESSONS_FOR_DAY.clear()
-    responce = db.get_record(day)
-    if responce:
+    response = db.get_record(day)
+    if response:
         result_day = f"Today is: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Schedule for {request_day}:\n"
-        serialized_response = serialize_tuple_to_dict(responce)
+        serialized_response = serialize_tuple_to_dict(response)
         for element in serialized_response:
             if element['order_number'] == 1:
                 result_day += f"\nONLINE"
