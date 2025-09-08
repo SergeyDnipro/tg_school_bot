@@ -10,7 +10,7 @@ class SQLiteDatabaseConnection:
             query = """
                 CREATE TABLE IF NOT EXISTS week(
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                day_of_week VARCHAR(20) NOT NULL
+                day_of_week VARCHAR(20) NOT NULL UNIQUE
                 )
             """
             cursor.execute(query)
@@ -24,7 +24,20 @@ class SQLiteDatabaseConnection:
                     end_time VARCHAR(10) NOT NULL,
                     name_of_lesson TEXT NOT NULL,
                     FOREIGN KEY (day_of_week) REFERENCES week(day_of_week) 
-                )             
+                )
+            """
+            cursor.execute(query)
+
+            query = """
+                INSERT INTO week(day_of_week) 
+                VALUES 
+                    ("Monday"),
+                    ("Tuesday"),
+                    ("Wednesday"),
+                    ("Thursday"),
+                    ("Friday")
+                ON CONFLICT DO NOTHING
+                
             """
             cursor.execute(query)
             connection.commit()
@@ -74,12 +87,17 @@ class SQLiteDatabaseConnection:
             connection.commit()
 
 
-week_days = {
-    'Monday': 0,
-    'Tuesday': 1,
-    'Wednesday': 2,
-    'Thursday': 3,
-    'Friday': 4,
+days_dict = {
+    "Понеділок": "Monday",
+    "Вівторок": "Tuesday",
+    "Середа": "Wednesday",
+    "Четвер": "Thursday",
+    "П'ятниця": "Friday",
+    "Monday": "Monday",
+    "Tuesday": "Tuesday",
+    "Wednesday": "Wednesday",
+    "Thursday": "Thursday",
+    "Friday": "Friday"
 }
 
 # schedule = {
@@ -95,20 +113,22 @@ week_days = {
 #     }
 # }
 
-ADMIN_ID = (5282220678, 7485258641)
+# ADMIN_ID = (5282220678, 7485258641)
 CHAT_ID = ''
 SYSTEM_BUTTONS = []
 TEMP_DAY = ''
 TEMP_TIME_LIST = []
 TEMP_LESSONS_FOR_DAY = []
 TEMP_LESSONS_NUMBERS = {
-    '1': '8:55-9:40',
-    '2': '9:50-10:35',
-    '4': '12:00-12:45',
-    '5': '13:00-13:45',
-    '6': '13:55-14:40',
-    '7': '14:50-15:35',
-    '8': '15:45-16:30'
+    '1': '8:00-8:45',
+    '2': '8:55-9:40',
+    '3': '9:50-10:35',
+    '4': '10:45-11:30',
+    '6': '12:00-12:45',
+    '7': '12:55-13:40',
+    '8': '13:50-14:35',
+    '9': '14:45-15:30',
+    '10': '15:40-16:25',
 }
 TEMP_LESSON_NUMBER = None
 TEMP_LESSON_TITLE = ''

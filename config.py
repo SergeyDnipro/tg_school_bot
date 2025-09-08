@@ -1,2 +1,16 @@
-TOKEN = '6623564412:AAGhSukh0xkUi0cZh0zdnV8nyww22y8JpW4'
-# test changes to branches
+DAY_CHOICE_BUTTON = "Обрати день"
+TODAY_SCHEDULE_BUTTON = "Розклад сьогодні"
+BACK_BUTTON = "\U00002B05 Back"
+
+# WEEKDAYS
+MONDAY_BUTTON = "Понеділок"
+TUESDAY_BUTTON = "Вівторок"
+WEDNESDAY_BUTTON = "Середа"
+THURSDAY_BUTTON = "Четвер"
+FRIDAY_BUTTON = "П'ятниця"
+
+# OPERATIONS
+ADD_LESSON_BUTTON = "Додати"
+DELETE_LESSON_BUTTON = "Видалити"
+EDIT_LESSON_BUTTON = "Редагувати"
+

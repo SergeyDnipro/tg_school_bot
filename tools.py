@@ -16,32 +16,33 @@ def serialize_tuple_to_dict(response: list) -> list:
     return serialized_response
 
 
-def get_messages(message, request_day=None):
-    day = storage.week_days[request_day] if request_day else datetime.today().weekday()
-    if day in storage.schedule:
-        result_day = f"Today is: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Schedule for {request_day}:\n"
-        for order, task in storage.schedule[day].items():
-            if order == 1:
-                result_day += f"\nONLINE"
-            elif order == 4:
-                result_day += f"\n\nOFFLINE"
-            result_day += f"\n{order} - {task}"
-        return result_day
-    else:
-        return 'No records'
+# def get_messages(message, request_day=None):
+#     day = storage.week_days[request_day] if request_day else datetime.today().weekday()
+#     if day in storage.schedule:
+#         result_day = f"Сьогодні:: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Розклад на: {request_day}:\n"
+#         for order, task in storage.schedule[day].items():
+#             if order == 1:
+#                 result_day += f"\nONLINE"
+#             elif order == 4:
+#                 result_day += f"\n\nOFFLINE"
+#             result_day += f"\n{order} - {task}"
+#         return result_day
+#     else:
+#         return 'No records'
 
 
 def get_lessons_from_db(request_day: str = None):
     day = request_day if request_day else datetime.today().strftime('%A')
     storage.TEMP_LESSONS_FOR_DAY.clear()
     response = db.get_record(day)
+
     if response:
-        result_day = f"Today is: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Schedule for {request_day}:\n"
+        result_day = f"Сьогодні: {datetime.now().strftime('%A, %d/%m/%y')}\n" if not request_day else f"Розклад на: {request_day}\n"
         serialized_response = serialize_tuple_to_dict(response)
         for element in serialized_response:
             if element['order_number'] == 1:
                 result_day += f"\nONLINE"
-            elif element['order_number'] == 4:
+            elif element['order_number'] == 6:
                 result_day += f"\n\nOFFLINE"
             result_day += f"\n{element['order_number']}. {element['start_time']}-{element['end_time']} - {element['lesson_name']}"
             if datetime.strptime(element['start_time'], '%H:%M').time() < datetime.now().time() < datetime.strptime(element['end_time'], '%H:%M').time()\
