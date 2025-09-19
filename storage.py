@@ -47,11 +47,22 @@ class SQLiteDatabaseConnection:
             cursor = connection.cursor()
 
             query = """
-                SELECT schedule.number_of_lesson, schedule.start_time, schedule.end_time, schedule.name_of_lesson FROM schedule
+                SELECT schedule.number_of_lesson, schedule.start_time, schedule.end_time, schedule.name_of_lesson, schedule.day_of_week FROM schedule
                 INNER JOIN week ON week.day_of_week = schedule.day_of_week
                 WHERE week.day_of_week LIKE :day
             """
             result = cursor.execute(query, {"day": day}).fetchall()
+            return result
+
+    def get_all_records(self):
+        with sqlite3.connect(self.database_name) as connection:
+            cursor = connection.cursor()
+
+            query = """
+                SELECT schedule.number_of_lesson, schedule.start_time, schedule.end_time, schedule.name_of_lesson, schedule.day_of_week FROM schedule
+            """
+
+            result = cursor.execute(query).fetchall()
             return result
 
     def edit_record(self, *, day: str, lesson: int, name_of_lesson: str):
@@ -100,6 +111,14 @@ days_dict = {
     "Friday": "Friday"
 }
 
+days_dict_eng_ukr = {
+    "Monday": "Понеділок",
+    "Tuesday": "Вівторок",
+    "Wednesday": "Середа",
+    "Thursday": "Четвер",
+    "Friday": "П'ятниця"
+}
+
 # schedule = {
 #     0: {
 #         1: '8:55-9:40   Навчаємось разом',
@@ -120,9 +139,9 @@ TEMP_DAY = ''
 TEMP_TIME_LIST = []
 TEMP_LESSONS_FOR_DAY = []
 TEMP_LESSONS_NUMBERS = {
-    '1': '8:00-8:45',
-    '2': '8:55-9:40',
-    '3': '9:50-10:35',
+    '1': '8:00-8:45    ',
+    '2': '8:55-9:40    ',
+    '3': '9:50-10:35  ',
     '4': '10:45-11:30',
     '6': '12:00-12:45',
     '7': '12:55-13:40',

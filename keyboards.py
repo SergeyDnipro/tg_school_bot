@@ -10,7 +10,9 @@ def get_keyboard():
     button_get_tasks = types.KeyboardButton(text=config.TODAY_SCHEDULE_BUTTON)
     # button_start = types.KeyboardButton(text="Start")
     keyboard.add(button_choice_day, button_get_tasks)
-    list_of_buttons = [button_choice_day.text, button_get_tasks.text]
+    button_week_schedule = types.KeyboardButton(text=config.WEEK_SCHEDULE_BUTTON)
+    keyboard.add(button_week_schedule)
+    list_of_buttons = [button_choice_day.text, button_get_tasks.text, button_week_schedule.text]
     SYSTEM_BUTTONS.extend(list_of_buttons) if not SYSTEM_BUTTONS else None
     return keyboard
 
