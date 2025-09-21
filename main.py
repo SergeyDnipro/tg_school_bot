@@ -1,12 +1,9 @@
 import config
-import telebot
-import os
+import telebot, schedule, time, datetime, threading, os
 import storage
 import keyboards
-from datetime import datetime
 from storage import database as db
 from tools import get_schedule_for_day_from_db, get_schedule_for_week_from_db
-from telebot import types
 from logger import main_logger
 from dotenv import load_dotenv
 
@@ -15,6 +12,31 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 ADMIN_IDS = list(map(int, os.getenv("ADMIN_IDS").split(',')))
 bot = telebot.TeleBot(TOKEN)
+
+
+def run_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+def check_db_and_send_message_to_tg():
+    response = db.get_all_records()
+    current_time = datetime.datetime.now().time()
+    current_day = datetime.datetime.today().strftime("%A")
+
+    for lesson_data in response:
+        start_time_lesson = lesson_data[1]
+        start_time_lesson_alert_dt_obj = datetime.datetime.strptime(start_time_lesson, "%H:%M") - datetime.timedelta(seconds=120)
+        start_time_lesson_alert_time_obj = start_time_lesson_alert_dt_obj.time()
+        db_day = lesson_data[4]
+
+        end_time_lesson_alert_time_obj = (start_time_lesson_alert_dt_obj + datetime.timedelta(seconds=70)).time()
+
+        if current_day == db_day and start_time_lesson_alert_time_obj < current_time <end_time_lesson_alert_time_obj:
+            alert_msg = f"<u>Нагадування.</u>\n\nУрок '{lesson_data[3]}' починається: {lesson_data[1]}.\nНе запізнюйтесь."
+            bot.send_message(ADMIN_IDS[1], alert_msg, parse_mode="HTML")
+            main_logger.info(f"Sending notification to {ADMIN_IDS[1]}. {lesson_data[3]}: {lesson_data[1]}")
 
 
 def get_messages_for_day(message):
@@ -58,13 +80,11 @@ def choose_day_option(message):
 
         elif message.text == config.EDIT_LESSON_BUTTON:
             current_keyboard_function = keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY)
-            # day_option_string = message.text + '_single_lesson'
             day_option_function = edit_single_lesson
             current_message = "Виберіть урок для редагування:"
 
         else:
             current_message = "Not valid command, try again"
-            # print(message.text)
             current_keyboard_function = keyboards.day_actions_menu()
             day_option_function = choose_day_option
 
@@ -126,10 +146,8 @@ def add_single_lesson_insert_to_db(message):
     bot.send_message(
         message.chat.id,
         "Дані збережено... ",
-        # reply_markup=keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY)
     )
     message.text = storage.TEMP_DAY
-    # bot.register_next_step_handler(message, get_messages_for_day)
     return get_messages_for_day(message)
 
 
@@ -204,7 +222,7 @@ def handle_messages(message):
         bot.register_next_step_handler(message, get_messages_for_day)
 
     elif message.text == config.TODAY_SCHEDULE_BUTTON:
-        bot.send_message(message.chat.id, get_schedule_for_day_from_db())
+        bot.send_message(message.chat.id, get_schedule_for_day_from_db(), parse_mode="HTML")
         # Today request logging
         main_logger.info(f"User {message.from_user.first_name} ({message.from_user.id}) request schedule for today")
 
@@ -219,6 +237,8 @@ def handle_messages(message):
             reply_markup=keyboards.get_keyboard()
         )
 
+threading.Thread(target=run_scheduler, daemon=True).start()
+schedule.every(1).minutes.do(check_db_and_send_message_to_tg)
 
 if __name__ == '__main__':
     bot.infinity_polling()
