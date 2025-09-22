@@ -33,10 +33,12 @@ def check_db_and_send_message_to_tg():
 
         end_time_lesson_alert_time_obj = (start_time_lesson_alert_dt_obj + datetime.timedelta(seconds=70)).time()
 
-        if current_day == db_day and start_time_lesson_alert_time_obj < current_time <end_time_lesson_alert_time_obj:
+        if (current_day == db_day
+                and start_time_lesson_alert_time_obj < current_time <end_time_lesson_alert_time_obj)\
+                and not lesson_data[3].strip().startswith("-"):
             alert_msg = f"<u>Нагадування.</u>\n\nУрок '{lesson_data[3]}' починається: {lesson_data[1]}.\nНе запізнюйтесь."
             bot.send_message(ADMIN_IDS[1], alert_msg, parse_mode="HTML")
-            main_logger.info(f"Sending notification to {ADMIN_IDS[1]}. {lesson_data[3]}: {lesson_data[1]}")
+            main_logger.info(f"Sending notification to {ADMIN_IDS[1]}. Lesson: {lesson_data[3]}, starts in: {lesson_data[1]}")
 
 
 def get_messages_for_day(message):
