@@ -1,9 +1,11 @@
+async-timeout==5.0.1
 certifi==2023.11.17
 charset-normalizer==3.3.2
 dotenv==0.9.9
 idna==3.6
 pyTelegramBotAPI==4.14.0
 python-dotenv==1.0.1
+redis==6.4.0
 requests==2.31.0
 schedule==1.2.2
 urllib3==2.1.0

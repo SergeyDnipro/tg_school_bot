@@ -1,18 +1,28 @@
+import redis
 import config
 from telebot import types
 from storage import SYSTEM_BUTTONS
-from storage import database as db
 
 
-def get_keyboard():
+def get_button_subscribe_status(*, redis_instance: redis.Redis, message: types.Message):
+    users_id = redis_instance.hgetall('subscribers').keys()
+    user_id = str(message.from_user.id)
+    if message and user_id not in users_id:
+        return config.SUBSCRIBE_BUTTON
+    else:
+        return config.UNSUBSCRIBE_BUTTON
+
+
+def get_keyboard(*, redis_instance: redis.Redis, message: types.Message=None):
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     button_choice_day = types.KeyboardButton(text=config.DAY_CHOICE_BUTTON)
     button_get_tasks = types.KeyboardButton(text=config.TODAY_SCHEDULE_BUTTON)
     # button_start = types.KeyboardButton(text="Start")
     keyboard.add(button_choice_day, button_get_tasks)
     button_week_schedule = types.KeyboardButton(text=config.WEEK_SCHEDULE_BUTTON)
-    keyboard.add(button_week_schedule)
-    list_of_buttons = [button_choice_day.text, button_get_tasks.text, button_week_schedule.text]
+    button_subscribe_status = types.KeyboardButton(text=get_button_subscribe_status(redis_instance=redis_instance, message=message))
+    keyboard.add(button_week_schedule ,button_subscribe_status)
+    list_of_buttons = [button_choice_day.text, button_get_tasks.text, button_week_schedule.text, button_subscribe_status]
     SYSTEM_BUTTONS.extend(list_of_buttons) if not SYSTEM_BUTTONS else None
     return keyboard
 

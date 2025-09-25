@@ -2,6 +2,7 @@ import config
 import telebot, schedule, time, datetime, threading, os
 import storage
 import keyboards
+import redis
 from storage import database as db
 from tools import get_schedule_for_day_from_db, get_schedule_for_week_from_db
 from logger import main_logger
@@ -12,6 +13,7 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 ADMIN_IDS = list(map(int, os.getenv("ADMIN_IDS").split(',')))
 bot = telebot.TeleBot(TOKEN)
+redis_instance = redis.Redis(host='localhost', port=6379, db=2, decode_responses=True)
 
 
 def run_scheduler():
@@ -208,7 +210,7 @@ def start(message):
     bot.send_message(
         message.chat.id,
         f"Welcome back, {message.from_user.first_name}",
-        reply_markup=keyboards.get_keyboard()
+        reply_markup=keyboards.get_keyboard(redis_instance=redis_instance, message=message)
     )
 
 
@@ -233,10 +235,22 @@ def handle_messages(message):
         # Week request logging
         main_logger.info(f"User {message.from_user.first_name} ({message.from_user.id}) request schedule for week")
     else:
+        if message.text == config.SUBSCRIBE_BUTTON:
+            message_for_chat = 'Subscribed'
+            redis_instance.hset('subscribers', message.from_user.id, message.from_user.first_name)
+            main_logger.info(f"User {message.from_user.first_name} ({message.from_user.id}) turned ON lessons notification")
+        elif message.text == config.UNSUBSCRIBE_BUTTON:
+            message_for_chat = 'Unsubscribed'
+            redis_instance.hdel('subscribers', message.from_user.id)
+            main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) turned OFF lessons notification")
+        else:
+            message_for_chat = "Будь ласка, виберіть елемент із нижнього меню"
+
         bot.send_message(
             message.chat.id,
-            "Будь ласка, виберіть елемент із нижнього меню",
-            reply_markup=keyboards.get_keyboard()
+            message_for_chat,
+            reply_markup=keyboards.get_keyboard(redis_instance=redis_instance, message=message),
+            parse_mode="HTML"
         )
 
 threading.Thread(target=run_scheduler, daemon=True).start()
