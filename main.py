@@ -3,8 +3,9 @@ import telebot, schedule, time, datetime, threading, os
 import storage
 import keyboards
 import redis
+import json
 from storage import database as db
-from tools import get_schedule_for_day_from_db, get_schedule_for_week_from_db
+from tools import get_schedule_for_day_from_db, get_schedule_for_week_from_db, get_schedule_from_cache_or_set
 from logger import main_logger
 from dotenv import load_dotenv
 
@@ -17,13 +18,16 @@ redis_instance = redis.Redis(host='localhost', port=6379, db=2, decode_responses
 
 
 def run_scheduler():
+    get_schedule_from_cache_or_set(redis_instance=redis_instance, refresh=True)
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
 def check_db_and_send_message_to_tg():
-    response = db.get_all_records()
+    users_dict = redis_instance.hgetall('subscribers')
+    response = get_schedule_from_cache_or_set(redis_instance)
+
     current_time = datetime.datetime.now().time()
     current_day = datetime.datetime.today().strftime("%A")
 
@@ -38,9 +42,13 @@ def check_db_and_send_message_to_tg():
         if (current_day == db_day
                 and start_time_lesson_alert_time_obj < current_time <end_time_lesson_alert_time_obj)\
                 and not lesson_data[3].strip().startswith("-"):
-            alert_msg = f"<u>Нагадування.</u>\n\nУрок '{lesson_data[3]}' починається: {lesson_data[1]}.\nНе запізнюйтесь."
-            bot.send_message(ADMIN_IDS[1], alert_msg, parse_mode="HTML")
-            main_logger.info(f"Sending notification to {ADMIN_IDS[1]}. Lesson: {lesson_data[3]}, starts in: {lesson_data[1]}")
+            alert_msg = f"<u>Нагадування.</u>\n\nУрок '{lesson_data[3]}' починається о: {lesson_data[1]}.\nНе запізнюйтесь."
+            for user_id, user_name in users_dict.items():
+                bot.send_message(int(user_id), alert_msg, parse_mode="HTML")
+                main_logger.info(
+                    f"Sending notification to {int(user_id)} ({user_name}). "
+                    f"Lesson: {lesson_data[3]}, starts in: {lesson_data[1]}"
+                )
 
 
 def get_messages_for_day(message):
@@ -142,6 +150,10 @@ def add_single_lesson_insert_to_db(message):
         return get_messages_for_day(message)
     msg_lesson_title = config.NO_LESSON if message.text == '-' else message.text
     db.add_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=msg_lesson_title)
+
+    # Refresh cache after changing DB
+    get_schedule_from_cache_or_set(redis_instance=redis_instance, refresh=True)
+
     # Add record logging
     main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
                         f"added record for {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER} - {message.text}")
@@ -164,17 +176,27 @@ def edit_single_lesson(message):
         if message.text == config.DELETE_LESSON_BUTTON:
             message.text = storage.TEMP_DAY
             db.delete_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER)
-            # Delete record logging
+
+            # Refresh cache after changing DB
+            get_schedule_from_cache_or_set(redis_instance=redis_instance, refresh=True)
+
+            # Delete-record logger
             main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
                                 f"delete record for: {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER}")
             get_schedule_for_day_from_db(request_day=storage.TEMP_DAY)
             return get_messages_for_day(message)
+
         msg_lesson_title = config.NO_LESSON if message.text == '-' else message.text
         db.edit_record(day=storage.TEMP_DAY, lesson=storage.TEMP_LESSON_NUMBER, name_of_lesson=msg_lesson_title)
-        # Edit record logging
+
+        # Refresh cache after changing DB
+        get_schedule_from_cache_or_set(redis_instance=redis_instance, refresh=True)
+
+        # Edit-record logger
         main_logger.warning(f"User {message.from_user.first_name} ({message.from_user.id}) "
                             f"edited record for {storage.TEMP_DAY}, Lesson {storage.TEMP_LESSON_NUMBER} - {message.text}")
 
+        # Get a new lesson list for keyboard
         get_schedule_for_day_from_db(request_day=storage.TEMP_DAY)
 
         bot.send_message(
@@ -183,6 +205,7 @@ def edit_single_lesson(message):
             parse_mode="HTML",
             reply_markup=keyboards.get_lessons_keyboard(storage.TEMP_LESSONS_FOR_DAY)
         )
+
         storage.TEMP_LESSON_NUMBER = None
         bot.register_next_step_handler(message, edit_single_lesson)
         return None
@@ -198,7 +221,6 @@ def edit_single_lesson(message):
         )
         bot.register_next_step_handler(message, edit_single_lesson)
         return None
-
     return None
 
 

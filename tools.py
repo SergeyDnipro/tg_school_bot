@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+import redis
 import storage
 from storage import database as db
 from logger import main_logger
@@ -23,7 +25,7 @@ def serialize_tuple_to_dict(response: list):
     return serialized_response
 
 
-def output_lessons_for_day(result_queryset: list, day: str) -> str:
+def process_lessons_in_the_day(result_queryset: list, day: str) -> str:
     serialized_response = serialize_tuple_to_dict(result_queryset)
     online_flag = False
     offline_flag = False
@@ -40,7 +42,7 @@ def output_lessons_for_day(result_queryset: list, day: str) -> str:
         if datetime.strptime(element['start_time'], '%H:%M').time() < datetime.now().time() < datetime.strptime(
                 element['end_time'].strip(), '%H:%M').time() \
                 and day == datetime.today().strftime('%A'):
-            result_day_str += '- NOW'
+            result_day_str += ' - NOW'
         storage.TEMP_LESSONS_FOR_DAY.append(
             f"{element['order_number']}.\t   {element['start_time']}-{element['end_time']} - {element['lesson_name']}")
 
@@ -56,7 +58,7 @@ def get_schedule_for_week_from_db():
             day_filtered_response = list(filter(lambda element: element[4] == storage.days_dict[day], response))
             if day_filtered_response:
                 result_week_str += f"\n\n<u><b>{day}</b></u>\n"
-                result_week_str += f"{output_lessons_for_day(day_filtered_response, day)}\n"
+                result_week_str += f"{process_lessons_in_the_day(day_filtered_response, day)}\n"
 
         return result_week_str
     else:
@@ -74,9 +76,22 @@ def get_schedule_for_day_from_db(request_day: str = None):
         formatted_day = storage.days_dict_eng_ukr[day]
         formatted_date = datetime.now().strftime('%d/%m/%Y')
         result_day = f"Сьогодні: <u>{formatted_day}</u>, {formatted_date}\n" if not request_day else f"Розклад на: <u>{storage.days_dict_eng_ukr[day]}</u>\n"
-        day_data_display = output_lessons_for_day(response, day)
+        day_data_display = process_lessons_in_the_day(response, day)
         result_day += day_data_display
 
         return result_day
     else:
         return 'No records found'
+
+
+def get_schedule_from_cache_or_set(redis_instance: redis.Redis, refresh: bool = False) -> list:
+    response = redis_instance.get('schedule')
+    if not response or refresh:
+        response = db.get_all_records()
+        redis_instance.set('schedule', json.dumps(response))
+        main_logger.warning('Get data from DB and refreshing Redis cache')
+    else:
+        # noinspection PyTypeChecker
+        response = json.loads(response)
+
+    return response

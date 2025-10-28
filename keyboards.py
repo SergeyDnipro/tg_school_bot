@@ -7,6 +7,7 @@ from storage import SYSTEM_BUTTONS
 def get_button_subscribe_status(*, redis_instance: redis.Redis, message: types.Message):
     users_id = redis_instance.hgetall('subscribers').keys()
     user_id = str(message.from_user.id)
+
     if message and user_id not in users_id:
         return config.SUBSCRIBE_BUTTON
     else:
