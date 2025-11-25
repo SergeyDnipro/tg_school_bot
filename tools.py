@@ -38,11 +38,13 @@ def process_lessons_in_the_day(result_queryset: list, day: str) -> str:
             result_day_str += f"\n\n<b>OFFLINE</b>"
             offline_flag = True
         lesson_time = f"{element['start_time']}-{element['end_time']}"
-        result_day_str += f"\n{element['order_number']}. {lesson_time}  - {element['lesson_name']}"
         if datetime.strptime(element['start_time'], '%H:%M').time() < datetime.now().time() < datetime.strptime(
                 element['end_time'].strip(), '%H:%M').time() \
                 and day == datetime.today().strftime('%A'):
-            result_day_str += ' - NOW'
+            result_day_str += "\n\U00002705"
+        else:
+            result_day_str += "\n\U00002716"
+        result_day_str += f"{element['order_number']}. {lesson_time}  - {element['lesson_name']}"
         storage.TEMP_LESSONS_FOR_DAY.append(
             f"{element['order_number']}.\t   {element['start_time']}-{element['end_time']} - {element['lesson_name']}")
 
@@ -75,7 +77,8 @@ def get_schedule_for_day_from_db(request_day: str = None):
     if response:
         formatted_day = storage.days_dict_eng_ukr[day]
         formatted_date = datetime.now().strftime('%d/%m/%Y')
-        result_day = f"Сьогодні: <u>{formatted_day}</u>, {formatted_date}\n" if not request_day else f"Розклад на: <u>{storage.days_dict_eng_ukr[day]}</u>\n"
+        result_day = f"Сьогодні: <u>{formatted_day}</u>, {formatted_date}\n" \
+            if not request_day else f"Розклад на: <u>{storage.days_dict_eng_ukr[day]}</u>\n"
         day_data_display = process_lessons_in_the_day(response, day)
         result_day += day_data_display
 
