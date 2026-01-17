@@ -119,7 +119,7 @@ def add_single_lesson(message):
     if message.text == config.BACK_BUTTON:
         message.text = storage.TEMP_DAY
         return get_messages_for_day(message)
-    lessons_at_the_day = [element[:1] for element in storage.TEMP_LESSONS_FOR_DAY]
+    lessons_at_the_day = [element[:2].strip('.') for element in storage.TEMP_LESSONS_FOR_DAY]
 
     if message.text not in lessons_at_the_day and message.text in storage.TEMP_LESSONS_NUMBERS:
         storage.TEMP_TIME_LIST = storage.TEMP_LESSONS_NUMBERS[message.text].split('-')
@@ -168,6 +168,7 @@ def add_single_lesson_insert_to_db(message):
 
 
 def edit_single_lesson(message):
+    lesson_number_from_message = message.text[:2].strip('.')
     if message.text == config.BACK_BUTTON:
         message.text = storage.TEMP_DAY
         return get_messages_for_day(message)
@@ -210,8 +211,8 @@ def edit_single_lesson(message):
         bot.register_next_step_handler(message, edit_single_lesson)
         return None
 
-    elif message.text[:1] in storage.TEMP_LESSONS_NUMBERS:
-        storage.TEMP_LESSON_NUMBER = int(message.text[:1])
+    elif lesson_number_from_message in storage.TEMP_LESSONS_NUMBERS:
+        storage.TEMP_LESSON_NUMBER = int(lesson_number_from_message)
         bot.send_message(
             message.chat.id,
             f"Введіть нову назву {storage.TEMP_LESSON_NUMBER}-го уроку в {storage.days_dict_eng_ukr[storage.TEMP_DAY]}, "
